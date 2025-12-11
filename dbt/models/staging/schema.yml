@@ -1,0 +1,98 @@
+version: 2
+
+sources:
+  - name: raw
+    database: airflow
+    schema: raw
+    description: Raw data source tables
+    tables:
+      - name: sales_transactions
+        description: Raw sales transaction data
+        columns:
+          - name: transaction_id
+            description: Primary key for transactions
+            tests:
+              - unique
+              - not_null
+          - name: user_id
+            description: Foreign key to users
+            tests:
+              - not_null
+          - name: amount
+            description: Transaction amount
+            tests:
+              - not_null
+          - name: status
+            description: Transaction status
+            tests:
+              - accepted_values:
+                  values: ['completed', 'failed', 'pending', 'cancelled']
+
+      - name: user_events
+        description: Raw user event data
+        columns:
+          - name: event_id
+            description: Primary key for events
+            tests:
+              - unique
+              - not_null
+          - name: user_id
+            description: Foreign key to users
+            tests:
+              - not_null
+          - name: event_type
+            description: Type of event
+            tests:
+              - not_null
+
+      - name: product_catalog
+        description: Product catalog data
+        columns:
+          - name: product_id
+            description: Primary key for products
+            tests:
+              - unique
+              - not_null
+
+models:
+  - name: stg_sales_transactions
+    description: Staging model for sales transactions with basic transformations
+    columns:
+      - name: transaction_id
+        description: Primary key
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: User who made the transaction
+        tests:
+          - not_null
+      - name: amount
+        description: Transaction amount in USD
+        tests:
+          - not_null
+      - name: is_completed
+        description: Boolean flag indicating if transaction was completed
+      - name: transaction_tier
+        description: Tier classification (high/medium/low) based on amount
+
+  - name: stg_user_events
+    description: Staging model for user events with extracted JSONB fields
+    columns:
+      - name: event_id
+        description: Primary key
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: User who triggered the event
+        tests:
+          - not_null
+      - name: event_type
+        description: Type of event
+        tests:
+          - not_null
+      - name: event_timestamp
+        description: When the event occurred
+        tests:
+          - not_null

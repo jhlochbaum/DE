@@ -1,0 +1,24 @@
+analytics:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      port: 5432
+      user: airflow
+      pass: airflow
+      dbname: airflow
+      schema: analytics
+      threads: 4
+      keepalives_idle: 0
+
+    prod:
+      type: postgres
+      host: postgres
+      port: 5432
+      user: airflow
+      pass: airflow
+      dbname: dbt_prod
+      schema: analytics
+      threads: 8
+      keepalives_idle: 0

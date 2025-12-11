@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: fct_daily_sales
+    description: Daily aggregated sales metrics
+    tests:
+      - dbt_utils.expression_is_true:
+          expression: "total_transactions >= completed_transactions + failed_transactions"
+    columns:
+      - name: date
+        description: Date of the sales aggregation
+        tests:
+          - unique
+          - not_null
+      - name: total_transactions
+        description: Total number of transactions
+        tests:
+          - not_null
+      - name: total_revenue
+        description: Total revenue for the day
+        tests:
+          - not_null
+      - name: completion_rate
+        description: Percentage of completed transactions
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+
+  - name: dim_user_metrics
+    description: User-level metrics and segmentation
+    columns:
+      - name: user_id
+        description: Primary key - unique user identifier
+        tests:
+          - unique
+          - not_null
+      - name: lifetime_value
+        description: Total value of all completed transactions
+        tests:
+          - not_null
+      - name: user_segment
+        description: User segment classification
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['VIP', 'High Value', 'Medium Value', 'Low Value', 'No Purchase']
+      - name: activity_status
+        description: User activity status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Active', 'At Risk', 'Dormant', 'Churned']
+      - name: engagement_score
+        description: Calculated engagement score
+        tests:
+          - not_null
