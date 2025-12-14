@@ -1,52 +1,24 @@
--- Initialize schemas for different purposes
--- Note: The 'airflow' database is already created by Docker environment variables
+-- Database Initialization Script
+-- Loads Northwind sample database for data engineering demonstrations
 
--- Create schemas for data organization
-CREATE SCHEMA IF NOT EXISTS raw;
-CREATE SCHEMA IF NOT EXISTS staging;
-CREATE SCHEMA IF NOT EXISTS analytics;
+-- Note: The 'airflow' database is created automatically by Docker environment variables
 
--- Sample tables for demonstration
-CREATE TABLE IF NOT EXISTS raw.user_events (
-    event_id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    event_type VARCHAR(50) NOT NULL,
-    event_timestamp TIMESTAMP NOT NULL,
-    event_data JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+\i /docker-entrypoint-initdb.d/northwind_schema.sql
 
-CREATE TABLE IF NOT EXISTS raw.sales_transactions (
-    transaction_id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    product_id INTEGER NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL,
-    currency VARCHAR(3) DEFAULT 'USD',
-    transaction_date TIMESTAMP NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS raw.product_catalog (
-    product_id SERIAL PRIMARY KEY,
-    product_name VARCHAR(255) NOT NULL,
-    category VARCHAR(100),
-    price DECIMAL(10, 2) NOT NULL,
-    stock_quantity INTEGER DEFAULT 0,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create indexes for performance
-CREATE INDEX idx_user_events_user_id ON raw.user_events(user_id);
-CREATE INDEX idx_user_events_timestamp ON raw.user_events(event_timestamp);
-CREATE INDEX idx_sales_user_id ON raw.sales_transactions(user_id);
-CREATE INDEX idx_sales_product_id ON raw.sales_transactions(product_id);
-CREATE INDEX idx_sales_date ON raw.sales_transactions(transaction_date);
-
--- Insert some sample data
-INSERT INTO raw.product_catalog (product_name, category, price, stock_quantity) VALUES
-    ('Laptop Pro', 'Electronics', 1299.99, 50),
-    ('Wireless Mouse', 'Electronics', 29.99, 200),
-    ('Desk Chair', 'Furniture', 199.99, 30),
-    ('Standing Desk', 'Furniture', 499.99, 15),
-    ('USB-C Hub', 'Electronics', 49.99, 100);
+-- The Northwind schema includes:
+-- - 8 Categories of products
+-- - 10 Suppliers across different countries
+-- - 25 Products with inventory and pricing
+-- - 30 Customers across multiple countries
+-- - 9 Employees with hierarchical reporting
+-- - 3 Shipping companies
+-- - 200 Orders from the last 90 days
+-- - ~600-800 Order line items (order_details)
+--
+-- Perfect for demonstrating:
+-- - ETL pipelines processing order data
+-- - Data quality checks on transactions
+-- - Customer analytics and segmentation
+-- - Product performance analysis
+-- - Inventory management
+-- - Sales forecasting
