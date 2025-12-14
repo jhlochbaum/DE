@@ -38,12 +38,14 @@ services:
       - ./airflow/plugins:/opt/airflow/plugins
       - ./airflow/config:/opt/airflow/config
       - ./data:/opt/airflow/data
-      - ./spark:/opt/airflow/spark
+      - ./kafka:/opt/airflow/kafka
+      - ./dbt:/opt/airflow/dbt
       - airflow_logs:/opt/airflow/logs
     ports:
       - "8080:8080"
     command: >
-      bash -c "airflow db init &&
+      bash -c "pip install kafka-python confluent-kafka dbt-core dbt-postgres &&
+               airflow db init &&
                airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
                airflow webserver"
     healthcheck:
@@ -69,9 +71,11 @@ services:
       - ./airflow/plugins:/opt/airflow/plugins
       - ./airflow/config:/opt/airflow/config
       - ./data:/opt/airflow/data
-      - ./spark:/opt/airflow/spark
+      - ./kafka:/opt/airflow/kafka
+      - ./dbt:/opt/airflow/dbt
       - airflow_logs:/opt/airflow/logs
-    command: airflow scheduler
+    command: >
+      bash -c "pip install kafka-python confluent-kafka dbt-core dbt-postgres && airflow scheduler"
     networks:
       - de_network
 
@@ -104,61 +108,6 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-    networks:
-      - de_network
-
-  # Spark Master
-  spark-master:
-    image: docker.io/bitnami/spark:3.4
-    container_name: de_spark_master
-    environment:
-      - SPARK_MODE=master
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
-    ports:
-      - "8081:8080"
-      - "7077:7077"
-    volumes:
-      - ./spark/jobs:/opt/spark-jobs
-      - ./data:/opt/spark-data
-    networks:
-      - de_network
-
-  # Spark Worker
-  spark-worker:
-    image: docker.io/bitnami/spark:3.4
-    container_name: de_spark_worker
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=2G
-      - SPARK_WORKER_CORES=2
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
-    volumes:
-      - ./spark/jobs:/opt/spark-jobs
-      - ./data:/opt/spark-data
-    networks:
-      - de_network
-
-  # Jupyter Notebook for interactive development
-  jupyter:
-    image: jupyter/pyspark-notebook:latest
-    container_name: de_jupyter
-    ports:
-      - "8888:8888"
-    environment:
-      JUPYTER_ENABLE_LAB: "yes"
-    volumes:
-      - ./notebooks:/home/jovyan/work
-      - ./data:/home/jovyan/data
-      - ./spark:/home/jovyan/spark
     networks:
       - de_network
 

@@ -1,9 +1,7 @@
--- Initialize databases for different purposes
-CREATE DATABASE IF NOT EXISTS dbt_dev;
-CREATE DATABASE IF NOT EXISTS dbt_prod;
-CREATE DATABASE IF NOT EXISTS analytics;
+-- Initialize schemas for different purposes
+-- Note: The 'airflow' database is already created by Docker environment variables
 
--- Create schema for raw data
+-- Create schemas for data organization
 CREATE SCHEMA IF NOT EXISTS raw;
 CREATE SCHEMA IF NOT EXISTS staging;
 CREATE SCHEMA IF NOT EXISTS analytics;
