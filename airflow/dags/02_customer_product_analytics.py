@@ -14,8 +14,8 @@ default_args = {
     'depends_on_past': False,
     'start_date': datetime(2024, 1, 1),
     'email_on_failure': False,
-    'retries': 2,
-    'retry_delay': timedelta(minutes=5),
+    'retries': 1,  # One retry with fast failure
+    'retry_delay': timedelta(seconds=30),
 }
 
 dag = DAG(
@@ -118,7 +118,7 @@ def analyze_customer_behavior(**context):
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import col, sum as _sum, avg, count, max as _max, min as _min
     from pyspark.sql.functions import datediff, current_date, round as spark_round
-    from pyspark.sql.functions import row_number, ntile
+    from pyspark.sql.functions import row_number, ntile, to_date, from_unixtime
     from pyspark.sql.window import Window
     import json
     import pandas as pd
@@ -151,6 +151,11 @@ def analyze_customer_behavior(**context):
         # Create Spark DataFrames with partitioning
         orders_df = spark.createDataFrame(orders_pd).repartition(8, "customer_id")
         details_df = spark.createDataFrame(details_pd).repartition(8, "order_id")
+
+        # Fix date columns - convert from timestamp milliseconds to date
+        orders_df = orders_df \
+            .withColumn("order_date", to_date(from_unixtime(col("order_date") / 1000))) \
+            .withColumn("shipped_date", to_date(from_unixtime(col("shipped_date") / 1000)))
 
         logging.info(f"\n1. DataFrames Created:")
         logging.info(f"   Orders: {orders_df.count()} rows, {orders_df.rdd.getNumPartitions()} partitions")
